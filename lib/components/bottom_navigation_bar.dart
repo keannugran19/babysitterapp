@@ -1,13 +1,16 @@
 import 'package:babysitterapp/pages/chat/chatpage.dart';
 import 'package:babysitterapp/pages/homepage/home_page.dart';
-import 'package:babysitterapp/pages/location/babysitter_view_location.dart';
 import 'package:babysitterapp/pages/settings_page/settings_page.dart';
 import 'package:babysitterapp/styles/colors.dart';
 import 'package:babysitterapp/styles/route_animation.dart';
 import 'package:flutter/material.dart';
 
 class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({super.key});
+  final String currentUserID;
+  const BottomNavBar({
+    super.key,
+    required this.currentUserID,
+  });
 
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
@@ -42,8 +45,8 @@ class _BottomNavBarState extends State<BottomNavBar> {
         await Navigator.push(
             context,
             RouteAnimate(0.0, 1.0,
-                page: const ChatPage(
-                  currentUserID: '5wnJp4QF73TvdxyZHo2jiK0NIfj2',
+                page: ChatPage(
+                  currentUserID: widget.currentUserID,
                 )));
         break;
       case 2:

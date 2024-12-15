@@ -1,3 +1,4 @@
+import 'package:babysitterapp/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -8,7 +9,7 @@ class UserModel {
   String phone;
 
   // added later for accounts page
-  String? img;
+  String? img = defaultImage;
   String? gender;
   GeoPoint? location;
   String? address;
@@ -24,22 +25,23 @@ class UserModel {
   double? rate;
   List? availability;
 
-  UserModel(
-      {required this.role,
-      required this.email,
-      required this.name,
-      required this.phone,
-      this.img,
-      this.gender,
-      this.location,
-      this.address,
-      this.information,
-      this.age,
-      this.childAge,
-      this.experience,
-      this.rating,
-      this.rate,
-      this.availability});
+  UserModel({
+    required this.role,
+    required this.email,
+    required this.name,
+    required this.phone,
+    this.img,
+    this.gender,
+    this.location,
+    this.address,
+    this.information,
+    this.age,
+    this.childAge,
+    this.experience,
+    this.rating,
+    this.rate,
+    this.availability,
+  });
 
   // Convert UserModel to Map
   Map<String, dynamic> toMap() {
@@ -48,7 +50,7 @@ class UserModel {
       'email': email,
       'name': name,
       'phone': phone,
-      'img': img ?? '',
+      'img': img ?? defaultImage,
       'gender': gender ?? 'Select Gender',
       'location': location ?? const GeoPoint(0, 0),
       'address': address ?? '',
@@ -69,7 +71,7 @@ class UserModel {
         email: map['email'] ?? '',
         name: map['name'] ?? '',
         phone: map['phone'] ?? '',
-        img: map['img'],
+        img: map['img'] ?? defaultImage,
         gender: map['gender'],
         location: map['location'],
         address: map['address'],

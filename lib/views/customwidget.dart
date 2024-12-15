@@ -1,13 +1,12 @@
 import 'dart:io';
 
 import 'package:babysitterapp/components/button.dart';
-import 'package:babysitterapp/controller/feedback.dart';
-import 'package:babysitterapp/controller/user.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:babysitterapp/services/chat_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../controller/messages.dart';
+import '../models/user_model.dart';
 import '../services/firestore.dart';
 import '../styles/colors.dart';
 
@@ -131,6 +130,7 @@ class CustomWidget {
     double rate,
     double rating,
     int reviewsNo,
+    List? availability,
   ) {
     DateTime currentDate = DateTime.now();
     TextStyle whiteTextColor() => const TextStyle(color: backgroundColor);
@@ -192,7 +192,7 @@ class CustomWidget {
                       children: [
                         ratingStar(rating.toInt(), 30, Colors.amber),
                         Text(
-                          rating.toStringAsFixed(1),
+                          rating.toString(),
                           style: whiteTextColor(),
                         ),
                       ],
@@ -224,14 +224,26 @@ class CustomWidget {
                         'Availabilty',
                         style: whiteTextColor(),
                       ),
-                      const Text(
-                        'MWF',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4,
-                          color: backgroundColor,
-                        ),
+                      Row(
+                        children: availability!
+                            .map((a) => Text(
+                                  a,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 4,
+                                    color: backgroundColor,
+                                  ),
+                                ))
+                            .toList(),
                       ),
+                      if (availability == [] || availability.isEmpty)
+                        const Text(
+                          'No availability yet',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: backgroundColor,
+                          ),
+                        ),
                     ],
                   ),
                   Column(
@@ -282,7 +294,7 @@ class CustomWidget {
               Text(
                 (userAbout != '') ? userAbout : 'No data yet.',
                 textAlign: TextAlign.justify,
-                maxLines: isExpanded ? null : 5,
+                maxLines: isExpanded ? null : 3,
                 overflow:
                     isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
               ),
@@ -317,86 +329,22 @@ class CustomWidget {
               ),
             ),
             const SizedBox(height: 5),
-            (experience != [])
-                ? Column(
-                    children: experience.map((experience) {
-                      return Row(
-                        children: [
-                          const Icon(CupertinoIcons.checkmark_alt),
-                          const SizedBox(width: 5),
-                          Text(experience),
-                        ],
-                      );
-                    }).toList(),
-                  )
-                : const Text('No experience yet'),
+            Column(
+              children: experience.map((experience) {
+                return Row(
+                  children: [
+                    const Icon(CupertinoIcons.checkmark_alt),
+                    const SizedBox(width: 5),
+                    Text(experience),
+                  ],
+                );
+              }).toList(),
+            ),
+            if (experience.isEmpty) const Text('No experience yet'),
           ],
         ),
       );
-  // feedback header for profile page
-  // feedbackHeader(String babysitterEmail, List<FeedBack>? feedbackList) {
-  //   return Container(
-  //     margin: const EdgeInsets.fromLTRB(20, 20, 20, 60),
-  //     child: Column(
-  //       children: [
-  //         const Text(
-  //           'Feedback',
-  //           style: TextStyle(
-  //             fontWeight: FontWeight.bold,
-  //             fontSize: 16,
-  //           ),
-  //         ),
-  //         (feedbackList != null)
-  //             ? CarouselSlider(
-  //                 items: feedbackList.map((feedback) {
-  //                   return FutureBuilder(
-  //                     future: fetchUserData(feedback.userId), // Fetch user data
-  //                     builder: (context, snapshot) {
-  //                       if (snapshot.connectionState ==
-  //                           ConnectionState.waiting) {
-  //                         return const CircularProgressIndicator();
-  //                       }
-  //                       if (snapshot.hasError || !snapshot.hasData) {
-  //                         return const Text('Error loading user data');
-  //                       }
 
-  //                       // Assuming user data has keys `img` and `name`
-  //                       final userData = snapshot.data as Map<String, dynamic>;
-  //                       return carouselItem(
-  //                         context,
-  //                         userData['img'] ?? '', // User's profile image
-  //                         userData['name'] ?? 'Unknown User', // User's name
-  //                         feedback.rating, // Feedback rating
-  //                         feedback.feedbackMsg ??
-  //                             'No message', // Feedback message
-  //                         feedback.images, // Feedback images
-  //                       );
-  //                     },
-  //                   );
-  //                 }).toList(),
-  //                 options: CarouselOptions(
-  //                   viewportFraction: .9,
-  //                   height: 500,
-  //                   autoPlay: (feedbackList.length > 1) ? true : false,
-  //                   enableInfiniteScroll:
-  //                       (feedbackList.length > 1) ? true : false,
-  //                   enlargeCenterPage: true,
-  //                 ),
-  //               )
-  //             : const Padding(
-  //                 padding: EdgeInsets.all(40),
-  //                 child: Text('No feedback yet'),
-  //               ),
-  //         (feedbackList != null)
-  //             ? TextButton(
-  //                 onPressed: () {},
-  //                 child: const Text('See all reviews'),
-  //               )
-  //             : Container(),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   //rating star icon
   Widget ratingStar(i, double size_, Color starColor) => Row(
@@ -510,23 +458,19 @@ class CustomWidget {
         actions: actions,
       );
 
-  Widget alertDialogBtn(String label, Color backgroundColor_, Color borderColor,
-          Color txtColor_, Function() onPressed) =>
+  Widget alertDialogBtn(Widget child_, Color backgroundColor_,
+          Color borderColor, Function() onPressed) =>
       ElevatedButton(
-        style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor_,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: borderColor,
-              ),
-            )),
-        onPressed: onPressed,
-        child: Text(
-          label,
-          style: TextStyle(color: txtColor_),
-        ),
-      );
+          style: ElevatedButton.styleFrom(
+              backgroundColor: backgroundColor_,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: borderColor,
+                ),
+              )),
+          onPressed: onPressed,
+          child: child_);
 
   //message container
   Widget messageContainer(bool isUser, Messages messages, Function() onTap_) =>
@@ -553,8 +497,9 @@ class CustomWidget {
       );
 
   //Line of each message
-  Widget messageLine(bool isUser, Messages messages, User? currentUser,
-      User? recipient, Function() onTap) {
+  Widget messageLine(bool isUser, Messages messages, UserModel? currentUser,
+      UserModel? recipient, Function() onTap) {
+
     final DateTime currentDate = DateTime.now();
     final bool isYesterday = messages.timestamp.year < currentDate.year ||
         messages.timestamp.month < currentDate.month ||
@@ -591,13 +536,18 @@ class CustomWidget {
                     ),
                     const SizedBox(width: 5),
                     CircleAvatar(
-                      backgroundImage: AssetImage(currentUser!.img),
+                      backgroundImage: const AssetImage(defaultImage),
+                      foregroundImage:
+                          AssetImage(currentUser!.img ?? defaultImage),
+
                       radius: 20,
                     ),
                   ]
                 : [
                     CircleAvatar(
-                      backgroundImage: AssetImage(recipient!.img),
+                      backgroundImage: const AssetImage(defaultImage),
+                      foregroundImage:
+                          AssetImage(recipient!.img ?? defaultImage),
                       radius: 20,
                     ),
                     const SizedBox(width: 5),

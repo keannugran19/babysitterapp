@@ -225,7 +225,9 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            bottomNavigationBar: const BottomNavBar());
+            bottomNavigationBar: BottomNavBar(
+              currentUserID: currentUser!.email,
+            ));
   }
 
   Widget _buildAnalyticsSection(BuildContext context) {

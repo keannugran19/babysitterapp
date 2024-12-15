@@ -1,11 +1,13 @@
 import 'package:babysitterapp/controller/messages.dart';
 import 'package:babysitterapp/pages/profile/babysitterprofilepage.dart';
+import 'package:babysitterapp/services/chat_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
-import '../../controller/user.dart';
 import '../../controller/userdata.dart';
-import '../../services/firestore.dart';
+import '../../models/user_model.dart';
+import '../../services/babysitter_service.dart';
+import '../../services/current_user_service.dart';
 import '../../views/customwidget.dart';
 
 class ChatBoxPage extends StatefulWidget {
@@ -22,9 +24,11 @@ class ChatBoxPage extends StatefulWidget {
 }
 
 class _ChatBoxPageState extends State<ChatBoxPage> {
-  FirestoreService firestoreService = FirestoreService();
-  late User? currentUser;
-  late User? recipient;
+  final CurrentUserService firestoreService = CurrentUserService();
+  final BabysitterService babysitterService = BabysitterService();
+  final ChatService chatService = ChatService();
+  late UserModel? currentUser;
+  late UserModel? recipient;
   final UserData userData = UserData();
   final CustomWidget customWidget = CustomWidget();
 
@@ -49,10 +53,11 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
 
 //fetch data based on id
   Future<void> fetchData() async {
-    currentUser = await firestoreService.getUserData(widget.currentUserID);
-    recipient = await firestoreService.getUserData(widget.recipientID);
-    messageList = await firestoreService.getMessages(
-        widget.currentUserID, widget.recipientID);
+    currentUser = await firestoreService.loadUserData();
+    recipient =
+        await babysitterService.getBabysitterByEmail(widget.recipientID);
+    messageList =
+        await chatService.getMessages(widget.currentUserID, widget.recipientID);
     setState(() {});
   }
 
@@ -62,7 +67,7 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
     return ListView(
       controller: scrollController,
       children: messageList.map((messages) {
-        bool isUser = currentUser!.id == messages.id;
+        bool isUser = currentUser!.email == messages.id;
 
         onTap() {
           setState(() {
@@ -84,7 +89,7 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
   //store current user new message
   addMessage(String message) async {
     Messages newMessage = Messages(
-      id: currentUser!.id,
+      id: currentUser!.email,
       msg: message,
       timestamp: DateTime.now(),
       isClicked: false,
@@ -97,14 +102,14 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
     });
 
     // Add the message to current user message collection
-    await firestoreService.addMessageToFirestore(
+    await chatService.addMessageToFirestore(
       widget.currentUserID,
       widget.recipientID,
       newMessage,
     );
 
     // Add the message to recipient message collection
-    await firestoreService.addMessageToFirestore(
+    await chatService.addMessageToFirestore(
       widget.recipientID,
       widget.currentUserID,
       newMessage,
@@ -134,14 +139,16 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
                     () => // Navigate to the chat box of the clicked babysitter
                         Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => BabysitterProfilePage(
-                    babysitterID: recipient!.id,
+                    babysitterID: recipient!.email,
                     currentUserID: widget.currentUserID,
                   ),
                 )),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundImage: AssetImage(recipient!.img),
+                      backgroundImage: const AssetImage(defaultImage),
+                      foregroundImage:
+                          AssetImage(recipient!.img ?? defaultImage),
                     ),
                     const SizedBox(width: 10),
                     Text(recipient!.name),
@@ -151,7 +158,6 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
               leading: IconButton(
                 onPressed: () {
                   setState(() {
-                    recipient!.isClicked = false;
                     Navigator.pop(context);
                   });
                 },
@@ -178,52 +184,6 @@ class _ChatBoxPageState extends State<ChatBoxPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              IconButton(
-                                onPressed: () {
-                                  //send offer function
-                                  showModalBottomSheet(
-                                    context: context,
-                                    builder: (context) {
-                                      return StatefulBuilder(
-                                        builder: (context, setState) {
-                                          return OfferModal(
-                                            iconOnPressed: () {
-                                              setState(() {
-                                                selectedOffer =
-                                                    userData.offerList.first;
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                            children:
-                                                userData.offerList.map((offer) {
-                                              return RadioListTile<String>(
-                                                title: Text('PHP $offer/hr'),
-                                                value: offer,
-                                                groupValue: selectedOffer,
-                                                onChanged: (String? value) {
-                                                  setState(() {
-                                                    selectedOffer = value!;
-                                                  });
-                                                },
-                                              );
-                                            }).toList(),
-                                            buttonOnPressed: () {
-                                              addMessage(
-                                                  'Offer: PHP $selectedOffer/hr');
-                                              setState(() {
-                                                selectedOffer =
-                                                    userData.offerList.first;
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
-                                  );
-                                },
-                                icon: const Icon(Icons.local_offer),
-                              ),
                               IconButton(
                                 onPressed: () {
                                   //add message function
