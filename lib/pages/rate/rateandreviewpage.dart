@@ -1,13 +1,12 @@
 import 'dart:io';
 
-import 'package:babysitterapp/services/chat_service.dart';
 import 'package:collection/collection.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../models/user_model.dart';
 import '../../services/current_user_service.dart';
 import '../../services/search_service.dart';
-import '../homepage/home_page.dart';
+import '/pages/homepage/home_page.dart';
 import '/views/customwidget.dart';
 import '/components/button.dart';
 import '/styles/colors.dart';
@@ -36,9 +35,8 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
   // !
   final TextEditingController _feedbackController = TextEditingController();
   int _rating = 0;
-  List<File> _images = []; // List to store selected images
+  final List<File> _images = []; // List to store selected images
   final ImagePicker _picker = ImagePicker();
-  bool isLoading = false;
 
   // load user data
   Future<void> loadUserData() async {
@@ -85,38 +83,6 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
     }
   }
 
-  // upload images to supabase and get the urls
-  Future<List<String>> uploadImages() async {
-    List<String> uploadedUrls = [];
-
-    if (_images.isEmpty) return uploadedUrls;
-
-    for (var image in _images) {
-      try {
-        // Generate a unique file name for each image
-        final fileName = DateTime.now().microsecondsSinceEpoch.toString();
-        final path = 'feedbacks/$fileName.jpg'; // Assuming all files are .jpg
-
-        // Upload the image to Supabase
-        final response = await Supabase.instance.client.storage
-            .from('images')
-            .upload(path, image);
-
-        // Get the public URL of the uploaded image
-        final publicUrl =
-            Supabase.instance.client.storage.from('images').getPublicUrl(path);
-
-        if (response.isNotEmpty) {
-          uploadedUrls.add(publicUrl);
-        }
-      } catch (e) {
-        print('Error uploading image: $e');
-      }
-    }
-
-    return uploadedUrls;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -132,8 +98,7 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CircleAvatar(
-                        backgroundImage: const AssetImage(defaultImage),
-                        foregroundImage: AssetImage(selectedBabysitter!['img']),
+                        backgroundImage: AssetImage(selectedBabysitter!['img']),
                         radius: 70,
                       ),
                       const SizedBox(height: 5),
@@ -298,38 +263,28 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
                               'Are you sure to submit your review?',
                               [
                                 customWidget.alertDialogBtn(
-                                  const Text(
-                                    'Cancel',
-                                    style: TextStyle(color: textColor),
-                                  ),
+                                  'Cancel',
                                   backgroundColor,
                                   primaryColor,
+                                  textColor,
                                   () {
                                     Navigator.pop(context);
                                   },
                                 ),
                                 customWidget.alertDialogBtn(
-                                  (!isLoading)
-                                      ? const Text(
-                                          'Submit',
-                                          style:
-                                              TextStyle(color: backgroundColor),
-                                        )
-                                      : const CircularProgressIndicator(),
+                                  'Submit',
                                   primaryColor,
                                   primaryColor,
+                                  backgroundColor,
                                   () async {
-                                    if (_rating != 0 || currentUser != null) {
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-                                      print(currentUser?.name);
-                                      print(_images);
-
-                                      List<String> imageURL =
-                                          await uploadImages();
-
-                                      print(imageURL);
+                                    if (_rating != 0) {
+                                      // ! deprecated add feedback function
+                                      //add feedback to firestore
+                                      // addFeedback(
+                                      //   _feedbackController.text,
+                                      //   _rating,
+                                      //   _images,
+                                      // );
 
                                       // add feedback to selectedbabysitter
                                       await firestoreService.addFeedback(
@@ -339,17 +294,7 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
                                         feedbackMessage:
                                             _feedbackController.text,
                                         rating: _rating,
-                                        imageURL_: imageURL,
                                       );
-
-                                      _feedbackController.clear();
-                                      setState(() {
-                                        _rating = 0;
-                                        _images = [];
-                                      });
-                                      setState(() {
-                                        isLoading = false;
-                                      });
 
                                       //display thankyou modal
                                       showDialog(
@@ -360,13 +305,11 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
                                             child: customWidget.thankYouDialog(
                                               () {
                                                 //pop until landing page
-                                                Navigator.pushReplacement(
-                                                    context,
-                                                    MaterialPageRoute(
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
                                                       builder: (context) =>
-                                                          const HomePage(),
-                                                    ));
-
+                                                          const HomePage()),
+                                                );
                                               },
                                             ),
                                           );
@@ -385,13 +328,10 @@ class _RateAndReviewPageState extends State<RateAndReviewPage> {
                                           'Please input rating.',
                                           [
                                             customWidget.alertDialogBtn(
-                                              const Text(
-                                                'Close',
-                                                style:
-                                                    TextStyle(color: textColor),
-                                              ),
+                                              'Close',
                                               backgroundColor,
                                               primaryColor,
+                                              textColor,
                                               () {
                                                 Navigator.pop(context);
                                               },

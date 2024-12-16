@@ -1,7 +1,5 @@
 import 'package:babysitterapp/pages/booking/requestpage.dart';
 import 'package:babysitterapp/pages/chat/chatboxpage.dart';
-import 'package:babysitterapp/pages/rate/feedbacklistpage.dart';
-import 'package:babysitterapp/services/chat_service.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/user_model.dart';
@@ -35,7 +33,6 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
   UserModel? babysitter;
   List<Map<String, dynamic>> feedbackList = [];
   bool isLoadingFeedback = true;
-  bool isExpanded = false;
 
   // Custom Widget
   final CustomWidget customWidget = CustomWidget();
@@ -78,21 +75,6 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
     }
   }
 
-  double calculateAverageRating() {
-    if (feedbackList.isEmpty) {
-      return 0.0; // Return 0.0 if the list is empty
-    }
-
-    // Extract all ratings from the feedbackList
-    final ratings = feedbackList.map((feedback) => feedback['rating'] as int);
-
-    // Calculate the sum of all ratings
-    final int totalRating = ratings.fold(0, (sum, rating) => sum + rating);
-
-    // Calculate the average and round to 1 decimal place
-    double average = totalRating / feedbackList.length;
-    return double.parse(average.toStringAsFixed(1));
-  }
   // Initiate loading in initState
   @override
   void initState() {
@@ -176,23 +158,19 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
                   babysitter!.age!,
                   babysitter!.gender ?? 'Unknown Gender',
                   babysitter!.rate!,
-                  calculateAverageRating(),
+                  babysitter!.rating ?? 0.0,
                   feedbackList.length,
-                  babysitter!.availability ?? [],
                 ),
                 customWidget.aboutHeader(
                   babysitter!.name.split(' ')[0],
                   babysitter!.information ?? 'No information provided',
-                  isExpanded,
+                  false,
                   () {
                     setState(() {
                       // Handle expand/collapse logic
-                      isExpanded = !isExpanded;
                     });
                   },
                 ),
-                customWidget.myDivider(),
-                customWidget.experienceHeader(babysitter!.experience!),
                 customWidget.myDivider(),
                 Container(
                   margin: const EdgeInsets.fromLTRB(20, 20, 20, 60),
@@ -233,19 +211,12 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
                                   padding: EdgeInsets.all(40),
                                   child: Text('No feedback yet'),
                                 ),
-                      feedbackList.isNotEmpty
-                          ? TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FeedbackListPage(
-                                          feedbackList_: feedbackList),
-                                    ));
-                              },
-                              child: const Text('See all reviews'),
-                            )
-                          : Container(),
+                      // feedbackList.isNotEmpty
+                      //     ? TextButton(
+                      //         onPressed: () {},
+                      //         child: const Text('See all reviews'),
+                      //       )
+                      //     : Container(),
                     ],
                   ),
                 ),
@@ -266,8 +237,7 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
       children: [
         if (img != null)
           CircleAvatar(
-            backgroundImage: const AssetImage(defaultImage),
-            foregroundImage: AssetImage(img),
+            backgroundImage: AssetImage(img),
             radius: 40,
           ),
         Text(
@@ -298,7 +268,7 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  Image.network(
+                                  Image.asset(
                                     image,
                                     fit: BoxFit.contain,
                                   ),
@@ -321,7 +291,7 @@ class _BabysitterProfilePageState extends State<BabysitterProfilePage> {
                             ),
                           );
                         },
-                        child: Image.network(
+                        child: Image.asset(
                           image,
                           height: (images.length == 1) ? 250 : 120,
                           width: (images.length == 1) ? 250 : 120,
