@@ -123,19 +123,18 @@ class CurrentUserService {
   }
 
   // add feedback to selected babysitter
-  Future<void> addFeedback(
-      {required String currentUserName,
-      required String babysitterName,
-      required String feedbackMessage,
-      required int rating,
-      required List<String> imageURL_}) async {
+  Future<void> addFeedback({
+    required String currentUserName,
+    required String babysitterName,
+    required String feedbackMessage,
+    required int rating,
+  }) async {
     try {
       await firestore.collection('feedbacks').add({
         'currentUserName': currentUserName,
         'babysitterName': babysitterName,
         'feedbackMessage': feedbackMessage,
         'rating': rating,
-        'images': imageURL_,
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {

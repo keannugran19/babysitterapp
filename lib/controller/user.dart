@@ -9,7 +9,7 @@ class User {
   final String phone;
   final DateTime birtdate;
   final String gender;
-  final double rate;
+  final int rate;
   final String description;
   final List experience;
   final String userType;
