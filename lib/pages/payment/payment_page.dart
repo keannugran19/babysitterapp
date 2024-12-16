@@ -6,7 +6,7 @@ class PaymentPage extends StatefulWidget {
   final String babysitterImage;
   final String babysitterName;
   final String babysitterEmail;
-
+  final DateTime selectedDate;
   final String parentName;
   final String specialRequirements;
   final String duration;
@@ -23,7 +23,7 @@ class PaymentPage extends StatefulWidget {
       required this.paymentMode,
       required this.totalpayment,
       required this.babysitterRate,
-      required this.babysitterEmail});
+      required this.babysitterEmail, required this.selectedDate});
 
   @override
   _PaymentPageState createState() => _PaymentPageState();
@@ -74,7 +74,8 @@ class _PaymentPageState extends State<PaymentPage> {
             duration: widget.duration.toString(),
             totalpayment: widget.totalpayment,
             babysitterRate: widget.babysitterRate,
-            babysitterEmail: widget.babysitterEmail,
+            babysitterEmail: widget.babysitterEmail, 
+            selectedDate: widget.selectedDate,
           ),
         ),
       );
@@ -95,6 +96,7 @@ class _PaymentPageState extends State<PaymentPage> {
             duration: widget.duration.toString(),
             totalpayment: widget.totalpayment,
             babysitterRate: widget.babysitterRate,
+            selectedDate: widget.selectedDate,
           ),
         ),
       );

@@ -3,6 +3,7 @@ import 'package:babysitterapp/pages/homepage/home_page.dart';
 import 'package:babysitterapp/components/button.dart';
 import 'package:flutter/material.dart';
 import '../../services/booking_service.dart';
+import 'package:intl/intl.dart'; 
 
 class ConfirmationPage extends StatelessWidget {
   final String babysitterImage;
@@ -14,6 +15,7 @@ class ConfirmationPage extends StatelessWidget {
   final String paymentMode;
   final String totalpayment;
   final double babysitterRate;
+  final DateTime selectedDate;
 
   const ConfirmationPage({
     super.key,
@@ -25,7 +27,7 @@ class ConfirmationPage extends StatelessWidget {
     required this.totalpayment,
     required this.babysitterRate,
     required this.parentName,
-    required this.babysitterEmail,
+    required this.babysitterEmail, required this.selectedDate,
   });
 
   @override
@@ -59,6 +61,7 @@ class ConfirmationPage extends StatelessWidget {
                 _buildTableRow('Babysitter Name:', babysitterName),
                 _buildTableRow('Special Requirements:',
                     specialRequirements.isEmpty ? 'None' : specialRequirements),
+                    _buildTableRow('Selected Date', DateFormat('EEE ,MMM, d, yyyy').format(selectedDate!)),
                 _buildTableRow('Duration:', _cleanDuration(duration)),
                 _buildTableRow('Parent Name:', parentName),
                 _buildTableRow('Payment Mode:', paymentMode),

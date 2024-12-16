@@ -1,4 +1,5 @@
 import 'package:babysitterapp/pages/payment/payment_page.dart';
+import 'package:babysitterapp/pages/booking/date_picker.dart';
 import 'package:flutter/material.dart';
 import '../../components/button.dart';
 import '../../components/textfield.dart';
@@ -34,6 +35,13 @@ class BookingRequestPage extends StatefulWidget {
 class _BookingRequestPageState extends State<BookingRequestPage> {
   final TextEditingController _specialRequirementsController =
       TextEditingController();
+
+      late DateTime selectedDate;
+      void _onDateSelected(DateTime date){
+        setState((){
+          selectedDate = date;
+        });
+      }
   final Map<String, bool> _selectedDays = {
     'Monday': true,
     'Tuesday': false,
@@ -82,7 +90,9 @@ class _BookingRequestPageState extends State<BookingRequestPage> {
           specialRequirements: _specialRequirementsController.text,
           duration: _durationHours.toString(),
           paymentMode: _paymentMode,
-          totalpayment: (hourlyRate * _durationHours).toStringAsFixed(2),
+          totalpayment: (hourlyRate * _durationHours).toStringAsFixed(2), 
+          selectedDate: selectedDate,
+          
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 1.0);
@@ -210,6 +220,8 @@ class _BookingRequestPageState extends State<BookingRequestPage> {
               child: Column(
                 children: [
                   AvailabilitySelector(selectedDays: _selectedDays),
+                  const SizedBox(height: 16),
+                  DatePicker(onDateSelected: _onDateSelected,),
                   const SizedBox(height: 16),
                   TimeSelector(
                     onDurationChanged:
